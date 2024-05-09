@@ -1,0 +1,13 @@
+extends ../layouts/page.pug
+
+block content
+  main
+    h1= header
+    if courses.length === 0
+      p Пока не добавлено ни одного курса
+    else
+      each course in courses
+        div
+          h2
+            a(href=`/courses/${course.id}`)= course.title
+          p= course.description

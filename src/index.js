@@ -1,4 +1,6 @@
 import fastify from 'fastify';
+import view from '@fastify/view';
+import pug from 'pug';
 
 const state = {
   users: [
@@ -7,14 +9,30 @@ const state = {
       name: 'user',
     },
   ],
+  courses: [
+    {
+      id: 1,
+      title: 'JS: Массивы',
+      description: 'Курс про массивы в JavaScript',
+    },
+    {
+      id: 2,
+      title: 'JS: Функции',
+      description: 'Курс про функции в JavaScript',
+    },
+  ],
 };
 
-export default () => {
+export default async () => {
   const app = fastify();
+
+  await app.register(view, { engine: { pug } });
   
   // exercise 3
   app.get('/', (req, res) => {
-    res.send('Welcome to Hexlet!');
+    // res.send('Welcome to Hexlet!');
+    // exercise 7
+    res.view('src/views/index');
   });
 
   // exercise 4
@@ -37,9 +55,10 @@ export default () => {
     res.send('Course build');
   });
   
-  app.get('/courses/:id', (req, res) => {
+  // see below
+  /* app.get('/courses/:id', (req, res) => {
     res.send(`Course ID: ${req.params.id}`);
-  });
+  }); */
 
   app.get('/courses/:courseId/lessons/:id', (req, res) => {
     res.send(`Course ID: ${req.params.courseId}; Lesson ID: ${req.params.id}`);
@@ -53,6 +72,28 @@ export default () => {
     } else {
       res.send(user);
     }
+  });
+
+  // exercise 7
+  app.get('/courses', (req, res) => {
+    const data = {
+      courses: state.courses, // Где-то хранится список курсов
+      header: 'Курсы по программированию',
+    };
+    res.view('src/views/courses/index', data);
+  });
+
+  app.get('/courses/:id', (req, res) => {
+    const { id } = req.params
+    const course = state.courses.find(({ id: courseId }) => courseId === parseInt(id));
+    if (!course) {
+      res.code(404).send({ message: 'Course not found' });
+      return;
+    }
+    const data = {
+      course,
+    };
+    res.view('src/views/courses/show', data);
   });
 
   return app;

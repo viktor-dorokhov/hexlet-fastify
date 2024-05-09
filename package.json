@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/viktor-dorokhov/hexlet-fastify#readme",
   "dependencies": {
+    "@fastify/view": "^9.1.0",
     "axios": "^1.6.8",
-    "fastify": "^4.27.0"
+    "fastify": "^4.27.0",
+    "pug": "^3.0.2"
   }
 }

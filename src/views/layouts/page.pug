@@ -1,0 +1,20 @@
+doctype html
+html
+  head
+    title= title
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css", integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN", crossorigin="anonymous")
+  body
+    nav.navbar.navbar-expand.navbar-light.bg-light
+      .container
+        a.navbar-brand(href="/") My fastify page
+        .collapse.navbar-collapse
+          ul.navbar-nav.me-auto.mb-2.mb-lg-0
+            li.nav-item
+              a.nav-link(href="/courses") Courses
+
+    .container
+      block content
+
+    .container
+      footer
+        a(href="https://github.com/viktor-dorokhov" target="_blank") My GitHub profile
