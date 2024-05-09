@@ -3,8 +3,24 @@ extends ../layouts/page.pug
 block content
   main
     h1= header
+
+    a.btn.btn-primary(href='/courses/new') Новый курс
+
+    form.my-4(action='/courses' method='get')
+      .row.form-group
+        .col-sm
+          label.form-label(for='title') Название курса
+          input.form-control(name='title' id='title' placeholder='Название' value=form.title)
+      .row.form-group
+        .col-sm
+          label.form-label(for="desc") Название курса
+          input.form-control(name='desc' id='desc' placeholder='Описание' value=form.desc)
+      .form-group.mt-3
+        input.btn.btn-success(type='submit' value='Поиск')
+        // input.btn.btn-secondary.btn-block.mx-3(type='reset' value='Сброс')
+
     if courses.length === 0
-      p Пока не добавлено ни одного курса
+      p Курсы не найдены
     else
       each course in courses
         div

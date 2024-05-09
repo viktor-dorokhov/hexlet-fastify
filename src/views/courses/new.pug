@@ -1,0 +1,21 @@
+extends ../layouts/page.pug
+
+block content
+  .row.mt-3
+    .col-sm-4.mx-auto
+      h3.text-xs-center Новый курс
+      form(action='/courses' method='post')
+        .row.form-group
+          .col-sm
+            label.form-label(for='formTitle') Название курса
+            input.form-control(name='title' id='formTitle' placeholder='Название курса' value=form.title)
+            if errors.title
+              .text-warning= errors.title
+        .row.form-group
+          .col-sm
+            label.form-label(for='formDesc') Описание
+            textarea.form-control(name='desc' id='formDesc' placeholder='Описание')= form.desc
+            if errors.desc
+              .text-warning= errors.desc
+        .form-group
+          button.btn.btn-success(type='submit') Создать
