@@ -6,7 +6,7 @@ block content
       h3.text-xs-center Новый пользователь
       if error
         p.text-warning= error
-      form(action='/users' method='post')
+      form(action=route('users') method='post')
         .row.form-group
           .col-sm
             label.form-label(for='formName') Имя пользователя

@@ -2,7 +2,7 @@ extends ../layouts/page.pug
 
 block content
   h1 Пользователи
-  form.input-group.my-4(role = 'form' method = 'GET' action = '/users')
+  form.input-group.my-4(role = 'form' method = 'GET' action = route('users'))
     input.form-control.rounded(type = 'search' name = 'term' value = form.term)
     input.btn.btn-outline-primary(type = 'submit' value = 'search')
   if users.length === 0
@@ -16,7 +16,7 @@ block content
       each user, index in users
         tr
           td
-            a(href='/users/' + user.id) #{user.id}
+            a(href=route('userShow', { id: user.id })) #{user.id}
           td= user.name
           td= user.email
-  a.btn.btn-primary(href='/users/new') Новый пользователь
+  a.btn.btn-primary(href=route('userNew')) Новый пользователь

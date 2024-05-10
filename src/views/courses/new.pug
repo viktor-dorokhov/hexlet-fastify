@@ -6,7 +6,7 @@ block content
       h3.text-xs-center Новый курс
       if error
         p.text-warning= error
-      form(action='/courses' method='post')
+      form(action=route('courses') method='post')
         .row.form-group
           .col-sm
             label.form-label(for='formTitle') Название курса

@@ -1,8 +1,9 @@
 import fastify from 'fastify';
 import middie from '@fastify/middie';
-import morgan from 'morgan';
 import view from '@fastify/view';
 import formbody from '@fastify/formbody';
+import { plugin as fastifyReverseRoutes } from 'fastify-reverse-routes';
+import morgan from 'morgan';
 import pug from 'pug';
 import sanitize from 'sanitize-html';
 import _ from 'lodash';
@@ -37,23 +38,29 @@ const state = {
 const matchValue = (text, value) => text.trim().toLowerCase().includes(value.trim().toLowerCase());
 
 export default async () => {
-  const app = fastify();
+  const app = fastify({ exposeHeadRoutes: false });
 
   await app.register(middie);
-  await app.register(view, { engine: { pug } });
+  await app.register(fastifyReverseRoutes);
+  await app.register(view, {
+    engine: { pug },
+    defaultContext: {
+      route: (name, placeholdersValues) => app.reverse(name, placeholdersValues),
+    },
+  });
   await app.register(formbody);
 
   app.use(logger);
   
   // exercise 3
-  app.get('/', (req, res) => {
+  app.get('/', { name: 'root' }, (req, res) => {
     // res.send('Welcome to Hexlet!');
     // exercise 7
     res.view('src/views/index');
   });
 
   // exercise 4
-  app.get('/users', (req, res) => {
+  app.get('/users', { name: 'users' }, (req, res) => {
     // res.send('GET /users');
     let filteredUsers = state.users;
     const { term } = req.query;
@@ -111,8 +118,9 @@ export default async () => {
     };
   
     state.users.push(user);
-  
-    res.redirect('/users');
+    
+    // res.redirect('/users');
+    res.redirect(app.reverse('users'));
   });
 
   // exercise 5
@@ -122,9 +130,9 @@ export default async () => {
   });
 
   // exercise 6
-  app.get('/courses/new', (req, res) => {
+  app.get('/courses/new', { name: 'courseNew' }, (req, res) => {
     // res.send('Course build');
-    res.view('src/views/courses/new', { form: {}, errors: {} });
+    res.view('src/views/courses/new', { form: {} });
   });
   
   // see below
@@ -136,11 +144,11 @@ export default async () => {
     res.send(`Course ID: ${req.params.courseId}; Lesson ID: ${req.params.id}`);
   });
 
-  app.get('/users/new', (req, res) => {
-    res.view('src/views/users/new', { form: {}, error: {} });
+  app.get('/users/new', { name: 'userNew' }, (req, res) => {
+    res.view('src/views/users/new', { form: {} });
   });
 
-  app.get('/users/:id', (req, res) => {
+  app.get('/users/:id', { name: 'userShow' }, (req, res) => {
     const { id } = req.params;
     const user = state.users.find((user) => user.id === id);
     if (!user) {
@@ -152,7 +160,7 @@ export default async () => {
   });
 
   // exercise 7
-  app.get('/courses', (req, res) => {
+  app.get('/courses', { name: 'courses' }, (req, res) => {
     let filteredCourses = state.courses;
     const { title: filterTitle, desc: filterDesc } = req.query;
     if (filterTitle) {
@@ -204,10 +212,11 @@ export default async () => {
   
     state.courses.push(course);
   
-    res.redirect('/courses');
+    // res.redirect('/courses');
+    res.redirect(app.reverse('courses'));
   });
 
-  app.get('/courses/:id', (req, res) => {
+  app.get('/courses/:id', { name: 'courseShow' }, (req, res) => {
     const { id } = req.params
     const course = state.courses.find(({ id: courseId }) => courseId === id);
     if (!course) {

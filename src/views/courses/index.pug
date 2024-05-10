@@ -4,9 +4,9 @@ block content
   main
     h1= header
 
-    a.btn.btn-primary(href='/courses/new') Новый курс
+    a.btn.btn-primary(href=route('courseNew')) Новый курс
 
-    form.my-4(action='/courses' method='get')
+    form.my-4(action=route('courses') method='get')
       .row.form-group
         .col-sm
           label.form-label(for='title') Название курса
@@ -25,5 +25,6 @@ block content
       each course in courses
         div
           h2
-            a(href=`/courses/${course.id}`)= course.title
+            //`/courses/${course.id}`
+            a(href=route('courseShow', { id: course.id }))= course.title
           p= course.description
