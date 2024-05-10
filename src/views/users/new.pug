@@ -4,30 +4,24 @@ block content
   .row.mt-3
     .col-sm-4.mx-auto
       h3.text-xs-center Новый пользователь
+      if error
+        p.text-warning= error
       form(action='/users' method='post')
         .row.form-group
           .col-sm
             label.form-label(for='formName') Имя пользователя
             input.form-control(name='name' id='formName' placeholder='Имя пользователя' value=form.name)
-            if errors.name
-              .text-warning= errors.name
         .row.form-group
           .col-sm
             label.form-label(for='formEmail') E-mail
             input.form-control(name='email' id='formEmail' placeholder='E-mail' value=form.email)
-            if errors.email
-              .text-warning= errors.email
         .row.form-group
           .col-sm
             label.form-label(for='formPassword') Имя пользователя
-            input.form-control(name='password' id='formPassword' type='password' placeholder='Пароль')
-            if errors.password
-              .text-warning= errors.password
+            input.form-control(name='password' id='formPassword' type='password' placeholder='Пароль' value=form.password)
         .row.form-group
           .col-sm
             label.form-label(for='formConfirmPassword') Подтвердите пароль
-            input.form-control(name='confirmPassword' id='formConfirmPassword' type='password' placeholder='Подтвердите пароль')
-            if errors.confirmPassword
-              .text-warning= errors.confirmPassword
+            input.form-control(name='confirmPassword' id='formConfirmPassword' type='password' placeholder='Подтвердите пароль' value=form.confirmPassword)
         .form-group
           button.btn.btn-success(type='submit') Зарегистрировать

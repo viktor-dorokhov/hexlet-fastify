@@ -1,9 +1,14 @@
 import fastify from 'fastify';
+import middie from '@fastify/middie';
+import morgan from 'morgan';
 import view from '@fastify/view';
 import formbody from '@fastify/formbody';
 import pug from 'pug';
 import sanitize from 'sanitize-html';
 import _ from 'lodash';
+import * as yup from 'yup';
+
+const logger = morgan('combined');
 
 const state = {
   users: [
@@ -34,8 +39,11 @@ const matchValue = (text, value) => text.trim().toLowerCase().includes(value.tri
 export default async () => {
   const app = fastify();
 
+  await app.register(middie);
   await app.register(view, { engine: { pug } });
   await app.register(formbody);
+
+  app.use(logger);
   
   // exercise 3
   app.get('/', (req, res) => {
@@ -59,8 +67,42 @@ export default async () => {
     res.view('src/views/users/index', data);
   });
 
-  app.post('/users', (req, res) => {
+  app.post('/users', {
+    attachValidation: true,
+    schema: {
+      body: yup.object({
+        name: yup.string().min(2),
+        email: yup.string().email(),
+        password: yup.string().min(5),
+        confirmPassword: yup.string().min(5),
+      }),
+    },
+    validatorCompiler: ({ schema, method, url, httpPart }) => (data) => {
+      if (data.password !== data.confirmPassword) {
+        return {
+          form: data,
+          error: new yup.ValidationError('Password confirmation is not equal the password'),
+        };
+      }
+      try {
+        const result = schema.validateSync(data);
+        return { value: result };
+      } catch (e) {
+        return { form: data, error: e };
+      }
+    },
+  }, (req, res) => {
     // res.send('POST /users');
+    if (req.validationError) {
+      const data = {
+        form: req.body,
+        error: req.validationError,
+      };
+  
+      res.view('src/views/users/new', data);
+      return;
+    }
+
     const user = {
       id: _.uniqueId(),
       name: req.body.name.trim(),
@@ -95,7 +137,7 @@ export default async () => {
   });
 
   app.get('/users/new', (req, res) => {
-    res.view('src/views/users/new', { form: {}, errors: {} });
+    res.view('src/views/users/new', { form: {}, error: {} });
   });
 
   app.get('/users/:id', (req, res) => {
@@ -127,7 +169,33 @@ export default async () => {
     res.view('src/views/courses/index', data);
   });
 
-  app.post('/courses', (req, res) => {
+  app.post('/courses', {
+    attachValidation: true,
+    schema: {
+      body: yup.object({
+        title: yup.string().min(2),
+        desc: yup.string().min(10),
+      }),
+    },
+    validatorCompiler: ({ schema, method, url, httpPart }) => (data) => {
+      try {
+        const result = schema.validateSync(data);
+        return { value: result };
+      } catch (e) {
+        return { form: data, error: e };
+      }
+    },
+  }, (req, res) => {
+    if (req.validationError) {
+      const data = {
+        form: req.body,
+        error: req.validationError,
+      };
+  
+      res.view('src/views/courses/new', data);
+      return;
+    }
+
     const course = {
       id: _.uniqueId(),
       title: req.body.title.trim(),
