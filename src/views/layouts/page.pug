@@ -13,6 +13,25 @@ html
               a.nav-link(href=route('courses')) Курсы
             li.nav-item
               a.nav-link(href=route('users')) Пользователи
+            li.nav-item
+              a.nav-link(href=route('sessionNew')) Логин
+    
+    .container
+      if flash
+        if flash.warning
+          for message in flash
+            .alert(class='alert-warning')
+              = message
+
+        if flash.success
+          for message in flash
+            .alert(class='alert-success')
+              = message
+
+        if flash.info
+          for message in flash
+            .alert(class='alert-info')
+              = message
 
     .container
       block content

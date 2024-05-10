@@ -1,0 +1,1 @@
+export const matchValue = (text, value) => text.trim().toLowerCase().includes(value.trim().toLowerCase());

@@ -2,3 +2,7 @@ extends layouts/page.pug
 
 block content
   h1.my-3 Main page
+  if !visited
+        | Это сообщение показывается только один раз. Если вы хотите увидеть его снова, сотрите куки
+  if userId
+    p Залогинен пользователь с id #{userId}
