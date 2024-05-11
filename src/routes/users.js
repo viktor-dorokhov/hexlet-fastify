@@ -1,21 +1,25 @@
 import _ from 'lodash';
 import * as yup from 'yup';
-import { matchValue } from '../utils.js';
+import encrypt from '../encrypt.js';
 
-export default (app, state) => {
-  // exercise 4
+export default (app, db) => {
+
   app.get('/users', { name: 'users' }, (req, res) => {
-    // res.send('GET /users');
-    let filteredUsers = state.users;
     const { term } = req.query;
-    if (term) {
-      filteredUsers = filteredUsers.filter(({ name }) => matchValue(name, term));
-    }
-    const data = {
-      users: filteredUsers,
-      form: req.query,
-    };
-    res.view('users/index', data);
+    const wherePart = term ? 'WHERE name LIKE ?' : '';
+    const params = term ? [`%${term}%`] : [];
+    db.all(`SELECT * FROM users ${wherePart}`, params, (error, users) => {
+      if (error) {
+        res.status(500).send(new Error(error));
+        return;
+      }
+      const data = {
+        users: users || [],
+        form: req.query,
+      };
+  
+      res.view('users/index', data, error);
+    });
   });
 
   app.post('/users', {
@@ -55,30 +59,57 @@ export default (app, state) => {
     }
 
     const user = {
-      id: _.uniqueId(),
       name: req.body.name.trim(),
       email: req.body.email.trim().toLowerCase(),
       password: encrypt(req.body.password),
     };
-  
-    state.users.push(user);
-    
-    // res.redirect('/users');
-    res.redirect(app.reverse('users'));
+
+    const stmt = db.prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+    stmt.run([user.name, user.email, user.password], function (error) {
+      if (error) {
+        res.status(500).send(new Error(error));
+        return;
+      }
+      // res.redirect(`/users/${this.lastID}`);
+      res.redirect(app.reverse('users'));
+    });
   });
 
   app.get('/users/new', { name: 'userNew' }, (req, res) => {
     res.view('users/new', { form: {} });
   });
 
-  app.get('/users/:id', { name: 'userShow' }, (req, res) => {
+  app.get('/users/:id', { name: 'userOne' }, (req, res) => {
     const { id } = req.params;
-    const user = state.users.find((user) => user.id === id);
-    if (!user) {
-      res.code(404).send({ message: 'User not found' });
-    } else {
-      // res.send(user);
-      res.view('users/show', { user });
-    }
+    db.get(`SELECT * FROM users WHERE id = ?`, [id], (error, user) => {
+      console.log('BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'); 
+      if (error) {
+        res.status(500).send(new Error(error));
+        return;
+      }
+      if (!user) {
+        res.code(404).send({ message: 'User not found' });
+      } else {
+        res.view('users/show', { user });
+      }
+    });
+  });
+
+  // for Override methods need to use Promise
+  app.delete('/users/:id', (req, res) => {
+    const { id } = req.params;
+    const stmt = db.prepare('DELETE FROM users WHERE id = ?');
+    return new Promise((resolve, reject) => {
+      stmt.run(id, (err) => {
+        if (err) {
+          req.flash('warning', 'Ошибка удаления пользователя');
+          res.redirect(app.reverse('user', { id }));
+          reject();
+        }
+        req.flash('success', 'Пользователь успешно удален');
+        res.redirect(app.reverse('users'));
+        resolve(true);
+      });
+    });
   });
 };

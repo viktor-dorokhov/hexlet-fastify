@@ -14,7 +14,12 @@ html
             li.nav-item
               a.nav-link(href=route('users')) Пользователи
             li.nav-item
-              a.nav-link(href=route('sessionNew')) Логин
+              if sessionUserId
+                form(action=route('session'), method="post")
+                  input(name="_method" type="hidden" value="DELETE")
+                  input.nav-link(type='submit' value="Выйти")
+              else
+                a.nav-link(href=route('sessionNew')) Логин
     
     .container
       if flash

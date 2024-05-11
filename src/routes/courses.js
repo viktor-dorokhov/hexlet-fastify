@@ -2,7 +2,7 @@ import _ from 'lodash';
 import * as yup from 'yup';
 import { matchValue } from '../utils.js';
 
-export default (app, state) => {
+export default (app, db) => {
   // exercise 6
   app.get('/courses/new', { name: 'courseNew' }, (req, res) => {
     // res.send('Course build');
@@ -16,20 +16,31 @@ export default (app, state) => {
 
   // exercise 7
   app.get('/courses', { name: 'courses' }, (req, res) => {
-    let filteredCourses = state.courses;
-    const { title: filterTitle, desc: filterDesc } = req.query;
-    if (filterTitle) {
-      filteredCourses = filteredCourses.filter(({ title }) => matchValue(title, filterTitle));
+    const { title, desc } = req.query;
+    let wherePart = '';
+    const params = [];
+    if (title) {
+      wherePart += ' title LIKE ?';
+      params.push(`%${title}%`);
     }
-    if (filterDesc) {
-      filteredCourses = filteredCourses.filter(({ description }) => matchValue(description, filterDesc));
+    if (desc) {
+      wherePart += `${wherePart ? ' AND': ''} description LIKE ?`;
+      params.push(`%${desc}%`);
     }
-    const data = {
-      courses: filteredCourses, // Где-то хранится список курсов
-      header: 'Курсы по программированию',
-      form: req.query,
-    };
-    res.view('courses/index', data);
+    wherePart = wherePart ? ` WHERE ${wherePart}`: '';
+    db.all(`SELECT * FROM courses ${wherePart}`, params, (error, courses) => {
+      if (error) {
+        res.status(500).send(new Error(error));
+        return;
+      }
+      const data = {
+        courses: courses || [],
+        header: 'Курсы по программированию',
+        form: req.query,
+      };
+  
+      res.view('courses/index', data);
+    });
   });
 
   app.post('/courses', {
@@ -64,23 +75,30 @@ export default (app, state) => {
       title: req.body.title.trim(),
       description: req.body.desc,
     };
-  
-    state.courses.push(course);
-  
-    // res.redirect('/courses');
-    res.redirect(app.reverse('courses'));
+
+    const stmt = db.prepare('INSERT INTO courses (title, description) VALUES (?, ?)');
+    stmt.run([course.title, course.description], function (error) {
+      if (error) {
+        res.status(500).send(new Error(error));
+        return;
+      }
+      // res.redirect(`/courses/${this.lastID}`);
+      res.redirect(app.reverse('courses'));
+    });
   });
 
   app.get('/courses/:id', { name: 'courseShow' }, (req, res) => {
-    const { id } = req.params
-    const course = state.courses.find(({ id: courseId }) => courseId === id);
-    if (!course) {
-      res.code(404).send({ message: 'Course not found' });
-      return;
-    }
-    const data = {
-      course,
-    };
-    res.view('courses/show', data);
+    const { id } = req.params;
+    db.get(`SELECT * FROM courses WHERE id = ?`, [id], (error, course) => {
+      if (error) {
+        res.status(500).send(new Error(error));
+        return;
+      }
+      if (!course) {
+        res.code(404).send({ message: 'Course not found' });
+      } else {
+        res.view('courses/show', { course });
+      }
+    });
   });
 };

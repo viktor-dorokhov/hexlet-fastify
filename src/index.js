@@ -6,47 +6,26 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import flash from '@fastify/flash';
 import { plugin as fastifyReverseRoutes } from 'fastify-reverse-routes';
+import fastifyMethodOverride from 'fastify-method-override';
 import sqlite3 from 'sqlite3';
 import morgan from 'morgan';
 import pug from 'pug';
 import sanitize from 'sanitize-html';
-import _ from 'lodash';
-import encrypt from './encrypt.js';
 
+import prepareDatabase from './dbInit.js';
 import addRoutes from './routes/index.js';
 
 const logger = morgan('combined');
 
-const db = new sqlite3.Database(':memory:');
-
-const state = {
-  users: [
-    {
-      id: _.uniqueId(),
-      name: 'user',
-      email: 'user@gmail.com',
-      password: encrypt('123'),
-    },
-  ],
-  courses: [
-    {
-      id: _.uniqueId(),
-      title: 'JS: Массивы',
-      description: 'Курс про массивы в JavaScript',
-    },
-    {
-      id: _.uniqueId(),
-      title: 'JS: Функции',
-      description: 'Курс про функции в JavaScript',
-    },
-  ],
-};
-
 export default async () => {
   const app = fastify({ exposeHeadRoutes: false });
 
+  const db = new sqlite3.Database(':memory:');
+  prepareDatabase(db);
+
   await app.register(middie);
   await app.register(fastifyReverseRoutes);
+  app.register(fastifyMethodOverride);
   await app.register(view, {
     engine: { pug },
     root: 'src/views',
@@ -65,11 +44,15 @@ export default async () => {
   app.use(logger);
 
   app.addHook('preHandler', (req, res, next) => {
-    console.log(`Запрос выполнен в ${new Date()}`);
+    // console.log(`Запрос выполнен в ${new Date()}`);
+    if (req.session.userId) {
+      res.locals.sessionUserId = req.session.userId;
+    }
     next();
   });
 
-  addRoutes(app, state);
+  // addRoutes(app, state);
+  addRoutes(app, db);
 
   // exercise 5
   app.get('/hello', (req, res) => {

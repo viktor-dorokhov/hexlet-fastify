@@ -8,7 +8,6 @@ export default (app) => {
     // exercise 7
     // console.log(res.flash('success'));
     const flash = res.flash();
-    // console.log(flash);
     res.view('index', { visited, userId: req.session.userId, flash });
   });
 };

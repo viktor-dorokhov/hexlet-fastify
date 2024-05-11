@@ -13,10 +13,16 @@ block content
         th Идентификатор пользователя
         th Имя пользователя
         th Емейл пользователя
+        th
       each user, index in users
         tr
           td
-            a(href=route('userShow', { id: user.id })) #{user.id}
+            a(href=route('userOne', { id: user.id })) #{user.id}
           td= user.name
           td= user.email
+          td
+            form(action=route('userOne', { id: user.id }), method="post")
+                  input(name="_method" type="hidden" value="DELETE")
+                  input(type='submit' value="Удалить" class="btn btn-link text-danger")
+              
   a.btn.btn-primary(href=route('userNew')) Новый пользователь
